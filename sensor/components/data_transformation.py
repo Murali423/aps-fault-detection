@@ -6,7 +6,7 @@ from typing import Optional
 from sensor import utils
 import pandas as pd 
 import numpy as np
-from sklearn.pipeline import pipeline
+from sklearn.pipeline import Pipeline
 from imblearn.combine import SMOTETomek
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import RobustScaler,LabelEncoder
@@ -66,7 +66,7 @@ class DataTransformation:
             input_feature_train_arr = transformation_pipeline.transform(input_feature_train_df)
             input_feature_test_arr = transformation_pipeline.transform(input_feature_test_df)
 
-            smt = SMOTETomek(ssampling_strategy='minority')
+            smt = SMOTETomek(random_state=42)
             logging.info(f"Before resampling in training set Input: {input_feature_train_arr.shape} Target:{target_feature_train_arr.shape}")
             input_feature_train_arr, target_feature_train_arr = smt.fit_resample(input_feature_train_arr,target_feature_train_arr)
             logging.info(f"After resampling in training set Input: {input_feature_train_arr.shape} Target:{target_feature_train_arr.shape}")
@@ -85,17 +85,17 @@ class DataTransformation:
             utils.save_numpy_array_data(file_path=self.data_transformaion_config.transformed_test_path, 
                                         array = test_arr)
 
-            utils.save_object(file_path=self.data_transformation_config.transform_object_path,
-             obj=transformation_pipleine)
+            utils.save_object(file_path=self.data_transformaion_config.transform_object_path,
+             obj=transformation_pipeline)
 
-            utils.save_object(file_path=self.data_transformation_config.target_encoder_path,
+            utils.save_object(file_path=self.data_transformaion_config.target_encoder_path,
             obj=label_encoder)
 
             data_transformation_artifact = artifact_entity.DataTransformationArtifact(
-                transform_object_path=self.data_transformation_config.transform_object_path,
-                transformed_train_path = self.data_transformation_config.transformed_train_path,
-                transformed_test_path = self.data_transformation_config.transformed_test_path,
-                target_encoder_path = self.data_transformation_config.target_encoder_path
+                transform_object_path=self.data_transformaion_config.transform_object_path,
+                transformed_train_path = self.data_transformaion_config.transformed_train_path,
+                transformed_test_path = self.data_transformaion_config.transformed_test_path,
+                target_encoder_path = self.data_transformaion_config.target_encoder_path
 
             )
 
