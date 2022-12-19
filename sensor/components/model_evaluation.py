@@ -4,7 +4,7 @@ from sensor.exception import SensorException
 from sensor.entity import config_entity, artifact_entity
 from sensor.utils import load_object
 from sensor.predictor import ModelResolver
-from skleran.metrics import f1_score 
+from sklearn.metrics import f1_score 
 import pandas as pandas
 from sensor.config import TARGET_COLUMN
 
@@ -25,3 +25,18 @@ class ModelEvalution:
             self.model_resolver = ModelResolver()
         except Exception as e:
             raise SensorException(e, sys)
+
+    def initiate_model_evaluation(self)->artifact_entity.ModelEvaluationArtifact:
+        try:
+            #if saved model folder has model the we will compare 
+            #which model is best trained or the model from saved model folder
+
+            logging.info("if saved model folder has model the we will compare "
+            "which model is best trained or the model from saved model folder")
+            latest_dir_path = self.model_resolver.get_latest_dir_path()
+            if latest_dir_path == None:
+                model_eval_artifact = artifact_entity.ModelEvaluationArtifact(is_model_accepted =True, improved_accuracy=None)
+                logging.info(f'Model evalutaion artifact:{model_eval_artifact}')
+                return model_eval_artifact
+        except Exception as e:
+            raise SensorException(e, sys) from e
