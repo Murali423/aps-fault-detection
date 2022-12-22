@@ -5,7 +5,7 @@ from sensor.entity import config_entity, artifact_entity
 from sensor.utils import load_object
 from sensor.predictor import ModelResolver
 from sklearn.metrics import f1_score 
-import pandas as pandas
+import pandas as pd
 from sensor.config import TARGET_COLUMN
 
 class ModelEvalution:
@@ -38,5 +38,52 @@ class ModelEvalution:
                 model_eval_artifact = artifact_entity.ModelEvaluationArtifact(is_model_accepted =True, improved_accuracy=None)
                 logging.info(f'Model evalutaion artifact:{model_eval_artifact}')
                 return model_eval_artifact
+
+            #Finding location of transformer model and target encoder
+            logging.info("Finding location of transformer model and target encoder")
+            transformer_path = self.model_resolver.get_latest_transformer_path()
+            model_path = self.model_resolver.get_latest_model_path()
+            target_encoder_path = self.model_resolver.get_latest_target_encoder_path()
+
+            logging.info("Previous trained objects of transformer, model and target encoder")
+            #Previous Trained objects
+            transformer = load_object(file_path = transformer_path)
+            model = load_object(file_path = model_path)
+            target_encoder = load_object(file_path = target_encoder_path)
+
+            #Currently trained model objects
+            logging.info("Currently trained model objects")
+            current_transformer = load_object(file_path = self.data_tranformation_artifact.transform_object_path)
+            current_model = load_object(file_path = self.model_trainer_artifact.model_path)
+            current_target_encoder = load_object(file_path = self.data_tranformation_artifact.target_encoder_path)
+
+            test_df = pd.read_csv(self.data_ingestion_artifact.test_file_path)
+            target_df = test_df[TARGET_COLUMN]
+            y_true = target_encoder.transform(target_df)
+            #accuracy using current trained model
+            input_feature_name = list(transformer.feature_names_in_)
+            input_arr =transformer.transform(test_df[input_feature_name])
+            y_pred = model.predict(input_arr)
+            print(f"Prediction using previous model:{transformer.inverse_transform(y_pred[:5])}")
+            previous_model_score = f1_score(y_true = y_true,y_pred = y_pred)
+            logging.info(f"Accuracy using previous trained model: {previous_model_score}")
+
+            # accuracy using current trained model
+            input_feature_name = list(current_transformer.feature_names_in_)
+            input_arr =current_transformer.transform(test_df[input_feature_name])
+            y_pred = current_model.predict(input_arr)
+            y_true =current_target_encoder.transform(target_df)
+            print(f"Prediction using trained model: {current_target_encoder.inverse_transform(y_pred[:5])}")
+            current_model_score = f1_score(y_true=y_true, y_pred=y_pred)
+            logging.info(f"Accuracy using current trained model: {current_model_score}")
+            if current_model_score<=previous_model_score:
+                logging.info(f"Current trained model is not better than previous model")
+                raise Exception("Current trained model is not better than previous model")
+
+            model_eval_artifact = artifact_entity.ModelEvaluationArtifact(is_model_accepted =True,
+                                    improved_accuracy = current_model_score - previous_model_score)
+            logging.info(f"Model eval artifact: {model_eval_artifact}")
+            return model_eval_artifact
+
         except Exception as e:
             raise SensorException(e, sys) from e
