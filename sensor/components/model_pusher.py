@@ -30,14 +30,14 @@ class ModelPusher:
             #model pusher dir
             logging.info(f"Saving model into model pusher directory")
             save_object(file_path = self.model_pusher_config.pusher_transformer_path, obj = transformer)
-            save_object(file_path=self.model_pusher_config.saved_model_dir, obj = model)
+            save_object(file_path=self.model_pusher_config.pusher_model_path, obj = model)
             save_object(file_path = self.model_pusher_config.pusher_target_encoder_path, obj = target_encoder)
             
             #saved model dir
             logging.info(f"Saving model in saved model dir")
             transformer_path = self.model_resolver.get_latest_save_transformer_path()
-            model_pah = self.model_resolver.get_latest_model_path()
-            target_encoder_path = self.model_resolver.get_latest_target_encoder_path()
+            model_pah = self.model_resolver.get_latest_save_model_path()
+            target_encoder_path = self.model_resolver.get_latest_save_target_encoder_path()
 
             save_object(file_path= transformer_path, obj=transformer)
             save_object(file_path = model_pah , obj = model) 
